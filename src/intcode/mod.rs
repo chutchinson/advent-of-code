@@ -50,6 +50,14 @@ impl Intcode {
         }
     }
 
+    pub fn read(&self, addr: i32) -> i32 {
+        self.memory[addr as usize]
+    }
+
+    pub fn write(&mut self, addr: i32, value: i32) {
+        self.memory[addr as usize] = value
+    }
+
     fn load(&mut self) -> i32 {
         let value = self.memory[self.pc];
         self.pc += 1;
@@ -59,14 +67,6 @@ impl Intcode {
     fn fetch(&mut self) -> i32 {
         let addr = self.load();
         self.read(addr)
-    }
-
-    pub fn read(&self, addr: i32) -> i32 {
-        self.memory[addr as usize]
-    }
-
-    pub fn write(&mut self, addr: i32, value: i32) {
-        self.memory[addr as usize] = value
     }
     
     fn halt(&mut self) {

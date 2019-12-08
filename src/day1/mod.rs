@@ -5,8 +5,8 @@ pub fn solve() {
     let input = include_str!("./input.txt");
     let masses = input.lines()
         .map(|x| x.parse::<f32>().unwrap());
-    let fuel_requirement_sum = masses.clone().fold(0.0, |total, x| total + fuel_required(x));
-    let fuel_requirement_total_sum = masses.clone().fold(0.0, |total, x| total + total_fuel_required(x));
+    let fuel_requirement_sum = masses.clone().fold(0.0, |total, mass| total + fuel_required(mass));
+    let fuel_requirement_total_sum = masses.clone().fold(0.0, |total, mass| total + total_fuel_required(mass));
     println!("{}", fuel_requirement_sum);
     println!("{}", fuel_requirement_total_sum);
 }

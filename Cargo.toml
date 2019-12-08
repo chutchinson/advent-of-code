@@ -1,0 +1,5 @@
+[package]
+name = "advent-of-code"
+version = "0.1.0"
+authors = ["Chris Hutchinson"]
+edition = "2018"

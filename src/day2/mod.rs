@@ -2,7 +2,7 @@ use crate::intcode::Intcode;
 
 pub fn solve() {
     let input = include_str!("./input.txt");
-    let mut program = Intcode::compile(input);
+    let program = Intcode::compile(input);
     let mut vm = Intcode::new();
 
     vm.reset(program.clone());
@@ -44,7 +44,7 @@ mod tests {
     }
 
     #[test]
-    fn sample_inputs_produce_expected_output() {
+    fn example_1() {
         assert_state("1,0,0,0,99", vec![2,0,0,0,99]);
         assert_state("2,3,0,3,99", vec![2,3,0,6,99]);
         assert_state("2,4,4,5,99,0", vec![2,4,4,5,99,9801]);

@@ -1,4 +1,4 @@
-use std::collections::{HashMap};
+use std::collections::{HashMap, HashSet};
 
 #[derive(Debug)]
 struct Orbit {
@@ -17,18 +17,83 @@ struct OrbitMap {
     orbits: Vec<Orbit>
 }
 
+struct OrbitIterator<'a> {
+    orbits: Vec<&'a Orbit>,
+    index: usize
+}
+
+struct PathIterator<'a> {
+    map: &'a OrbitMap,
+    body: usize
+}
+
+impl<'a> Iterator for PathIterator<'a> {
+    type Item = usize;
+    fn next(&mut self) -> Option<Self::Item> {
+        None
+    }
+}
+
+impl<'a> Clone for OrbitIterator<'a> {
+    fn clone(&self) -> Self {
+        OrbitIterator {
+            orbits: self.orbits.clone(),
+            index: self.index
+        }
+    }
+}
+
+impl<'a> Iterator for OrbitIterator<'a> {
+    type Item = &'a usize;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index >= self.orbits.len() {
+            return None;
+        }
+        let orbit = self.orbits[self.index];
+        self.index += 1;
+        Some(&orbit.satellite)
+    }
+}
+
 impl OrbitMap {
+
+    fn satellites<'a>(&self, body: usize) -> OrbitIterator {
+        let orbits = self.orbits.iter().filter(|x| x.body == body).collect();
+        OrbitIterator {
+            index: 0,
+            orbits
+        }
+    }
+
+    fn path_to_root<'a>(&self, body: usize) -> PathIterator {
+        PathIterator {
+            map: self,
+            body
+        }
+    }
+
+    fn shortest_path(&self, a: usize, b: usize) -> usize {
+        let root = 0;
+        let path1: HashSet<usize> = self.path_to_root(a).collect();
+        let path2: HashSet<usize> = self.path_to_root(b).collect();
+        let intersection = path1.intersection(&path2).next().unwrap();
+        let index_1 = path1.iter().position(|x| x == intersection).unwrap();
+        let index_2 = path2.iter().position(|x| x == intersection).unwrap();
+        index_1 + index_2
+    }
+
     fn total_orbits(&self, body: usize, depth: usize) -> usize {
-        let orbits = self.orbits.iter().enumerate().filter(|(_, x)| x.body == body);
-        let len = orbits.clone().count();
+        let satellites = self.satellites(body);
+        let len = satellites.clone().count();
         if len == 0 {
             return depth;
         }
-        depth + orbits.fold(0, |mut total, (_, x)| {
-            total += self.total_orbits(x.satellite, depth + 1);
+        depth + satellites.fold(0, |mut total, x| {
+            total += self.total_orbits(*x, depth + 1);
             total
         })
     }
+
 }
 
 fn orbits(input: &str) -> OrbitMap {

@@ -12,6 +12,10 @@ const OP_ADD: i32 = 1;
 const OP_MUL: i32 = 2;
 const OP_INPUT: i32 = 3;
 const OP_OUTPUT: i32 = 4;
+const OP_JT: i32 = 5;
+const OP_JF: i32 = 6;
+const OP_CLT: i32 = 7;
+const OP_CEQ: i32 = 8;
 
 fn extract_digit(value: i32, index: usize) -> i32 {
     let power = 10i32.pow(index as u32);
@@ -98,6 +102,10 @@ impl Intcode {
             OP_HALT => self.op_halt(&op),
             OP_INPUT => self.op_input(&op),
             OP_OUTPUT => self.op_output(&op),
+            OP_JT => self.op_jt(&op),
+            OP_JF => self.op_jf(&op),
+            OP_CEQ => self.op_ceq(&op),
+            OP_CLT => self.op_clt(&op),
             _ => self.halted = true
         }
     }
@@ -130,6 +138,36 @@ impl Intcode {
         let value = self.memory[self.pc];
         self.pc += 1;
         value
+    }
+
+    fn op_jt(&mut self, op: &Instruction) {
+        let cond = self.fetch(op.op1);
+        let addr = self.fetch(op.op2);
+        if cond != 0 {
+            self.pc = addr as usize;
+        }
+    }
+
+    fn op_jf(&mut self, op: &Instruction) {
+        let cond = self.fetch(op.op1);
+        let addr = self.fetch(op.op2);
+        if cond == 0 {
+            self.pc = addr as usize;
+        }
+    }
+
+    fn op_clt(&mut self, op: &Instruction) {
+        let a = self.fetch(op.op1);
+        let b = self.fetch(op.op2);
+        let dest = self.load();
+        self.write(dest, if a < b { 1 } else { 0 });
+    }
+
+    fn op_ceq(&mut self, op: &Instruction) {
+        let a = self.fetch(op.op1);
+        let b = self.fetch(op.op2);
+        let dest = self.load();
+        self.write(dest, if a == b { 1 } else { 0 });
     }
 
     fn op_input(&mut self, _: &Instruction) {

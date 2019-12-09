@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate lazy_static;
-
 mod intcode;
 mod day1;
 mod day2;
@@ -21,20 +18,5 @@ fn main() {
         println!("---");
         solve();
         println!("---");
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    fn extract_digit(value: i32, index: usize) -> i32 {
-        let power = 10i32.pow(index as u32);
-        let digit = (value / power) % 10;
-        digit
-    }
-    #[test]
-    fn example_1() {
-        let value = 1234;
-        let x = extract_digit(value, 3);
-        assert_eq!(x, 1);
     }
 }

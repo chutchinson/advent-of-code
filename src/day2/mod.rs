@@ -40,7 +40,7 @@ mod tests {
         vm.reset(program);
         vm.run();
         let state = &vm.memory[0..expected_state.len()];
-        assert_eq!(state, &expected_state[0..]);
+        assert_eq!(&expected_state[0..], state);
     }
 
     #[test]

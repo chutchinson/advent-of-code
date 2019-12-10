@@ -1,9 +1,11 @@
+use std::collections::VecDeque;
+
 #[derive(Debug)]
 pub struct Intcode {
     pub halted: bool,
     pub memory: Vec<i32>,
     pub pc: usize,
-    pub input: i32,
+    pub inputs: VecDeque<i32>,
     pub outputs: Vec<i32>
 }
 
@@ -51,10 +53,10 @@ impl Intcode {
     pub fn new() -> Intcode {
         Intcode {
             memory: Vec::new(),
+            inputs: VecDeque::new(),
             outputs: Vec::new(),
             pc: 0,
-            halted: false,
-            input: 0
+            halted: false
         }
     }
 
@@ -88,7 +90,8 @@ impl Intcode {
         self.memory = memory;
         self.pc = 0;
         self.halted = false;
-        self.input = 0;
+        self.inputs.clear();
+        self.outputs.clear();
     }
 
     pub fn cycle(&mut self) {
@@ -111,6 +114,7 @@ impl Intcode {
     }
 
     pub fn run(&mut self) {
+        self.halted = false;
         while !self.halted {
             self.cycle()
         }
@@ -172,15 +176,18 @@ impl Intcode {
 
     fn op_input(&mut self, _: &Instruction) {
         let dest = self.load();
-        self.write(dest, self.input);
+        let value = self.inputs.pop_front().unwrap();
+        self.write(dest, value);
     }
 
     fn op_output(&mut self, op: &Instruction) {
         let value = self.fetch(op.op1);
         self.outputs.push(value);
+        self.halted = true;
     }
     
     fn op_halt(&mut self, _: &Instruction) {
+        self.pc += 1;
         self.halted = true;
     }
 

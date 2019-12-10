@@ -4,7 +4,7 @@ pub fn solve() {
     let input = include_str!("./input.txt");
     let execute = |value| {
         let mut vm = Intcode::with_input(input);
-        vm.input = value;
+        vm.inputs.push_front(value);
         vm.run();
         *vm.outputs.last().unwrap()
     };
@@ -23,7 +23,7 @@ mod tests {
 
     fn assert_memory(program: &str, input: i32, addr: i32, expected: i32) {
         let mut vm = Intcode::with_input(program);
-        vm.input = input;
+        vm.inputs.push_front(input);
         vm.run();
         let v = vm.read(addr);
         assert_eq!(expected, v);
@@ -31,7 +31,7 @@ mod tests {
 
     fn assert_output(program: &str, input: i32, output: i32) {
         let mut vm = Intcode::with_input(program);
-        vm.input = input;
+        vm.inputs.push_front(input);
         vm.run();
         let value = vm.outputs.last().unwrap();
         assert_eq!(output, *value);

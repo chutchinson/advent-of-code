@@ -56,14 +56,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn example_1() {
+    fn passwords_meet_criteria() {
         assert_eq!(true, is_valid_password_1(111111));
         assert_eq!(false, is_valid_password_1(223450));
         assert_eq!(false, is_valid_password_1(123789));
     }
 
     #[test]
-    fn example_2() {
+    fn passwords_match_if_digits_not_part_of_larger_group() {
         assert_eq!(true, is_valid_password_2(112233));
         assert_eq!(false, is_valid_password_2(123444));
         assert_eq!(true, is_valid_password_2(111122));

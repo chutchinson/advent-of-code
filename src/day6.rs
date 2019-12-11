@@ -82,7 +82,6 @@ impl OrbitMap {
     }
 
     fn shortest_path(&self, a: usize, b: usize) -> usize {
-        let root = 0;
         let path1: HashSet<usize> = self.path_to_root(a).collect();
         let path2: HashSet<usize> = self.path_to_root(b).collect();
         let intersection = path1.intersection(&path2).next().unwrap();

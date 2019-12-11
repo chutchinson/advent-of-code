@@ -1,14 +1,12 @@
 use std::collections::VecDeque;
 
-pub type IntcodeType = i64;
-
 #[derive(Debug)]
 pub struct Intcode {
     pub halted: bool,
-    pub memory: Vec<IntcodeType>,
+    pub memory: Vec<i64>,
     pub pc: usize,
-    pub inputs: VecDeque<IntcodeType>,
-    pub outputs: Vec<IntcodeType>,
+    pub inputs: VecDeque<i64>,
+    pub outputs: Vec<i64>,
     pub yielding: bool,
     pub relative_base: i64
 }
@@ -39,8 +37,8 @@ struct Instruction {
     op3: Parameter
 }
 
-impl From<IntcodeType> for Parameter {
-    fn from(value: IntcodeType) -> Parameter {
+impl From<i64> for Parameter {
+    fn from(value: i64) -> Parameter {
         match value {
             0 => Parameter::Position,
             1 => Parameter::Immediate,
@@ -51,9 +49,9 @@ impl From<IntcodeType> for Parameter {
 }
 
 pub struct IntcodeBuilder {
-    memory: Vec<IntcodeType>,
-    inputs: Vec<IntcodeType>,
-    relative_base: IntcodeType
+    memory: Vec<i64>,
+    inputs: Vec<i64>,
+    relative_base: i64
 }
 
 impl IntcodeBuilder {
@@ -66,7 +64,7 @@ impl IntcodeBuilder {
         }
     }
 
-    pub fn with_memory(mut self, memory: &[IntcodeType]) -> IntcodeBuilder {
+    pub fn with_memory(mut self, memory: &[i64]) -> IntcodeBuilder {
         let size = std::cmp::max(memory.len(), self.memory.len());
         self.memory.resize(size, 0);
         let slice = &mut self.memory[0..memory.len()];
@@ -74,17 +72,17 @@ impl IntcodeBuilder {
         self
     }
 
-    pub fn with_inputs(mut self, inputs: &[IntcodeType]) -> IntcodeBuilder {
+    pub fn with_inputs(mut self, inputs: &[i64]) -> IntcodeBuilder {
         self.inputs.extend(inputs.iter());
         self
     }
 
-    pub fn with_relative_base(mut self, value: IntcodeType) -> IntcodeBuilder {
+    pub fn with_relative_base(mut self, value: i64) -> IntcodeBuilder {
         self.relative_base = value;
         self
     }
 
-    pub fn with_program(mut self, input: &str) -> IntcodeBuilder {
+    pub fn with_program(self, input: &str) -> IntcodeBuilder {
         let program = Intcode::compile(input);
         self.with_memory(&program)
     }
@@ -118,10 +116,10 @@ impl Intcode {
         }
     }
 
-    pub fn compile(input: &str) -> Vec<IntcodeType> {
+    pub fn compile(input: &str) -> Vec<i64> {
         input
             .split(",")
-            .map(|x| x.parse::<IntcodeType>().unwrap())
+            .map(|x| x.parse::<i64>().unwrap())
             .collect()
     }
 
@@ -139,7 +137,7 @@ impl Intcode {
         }
     }
 
-    pub fn reset(&mut self, memory: Vec<IntcodeType>) {
+    pub fn reset(&mut self, memory: Vec<i64>) {
         self.memory = memory;
         self.pc = 0;
         self.halted = false;
@@ -185,18 +183,18 @@ impl Intcode {
         }
     }
 
-    pub fn read(&self, addr: IntcodeType) -> IntcodeType {
+    pub fn read(&self, addr: i64) -> i64 {
         if addr < 0 {
             panic!("attempt to read from negative memory address");
         }
         self.memory[addr as usize]
     }
 
-    pub fn write(&mut self, addr: IntcodeType, value: IntcodeType) {
+    pub fn write(&mut self, addr: i64, value: i64) {
         self.memory[addr as usize] = value
     }
 
-    fn fetch_out(&mut self, parameter: Parameter) -> IntcodeType {
+    fn fetch_out(&mut self, parameter: Parameter) -> i64 {
         let addr = self.load();
         match parameter {
             Parameter::Position => addr,
@@ -205,7 +203,7 @@ impl Intcode {
         }
     }
 
-    fn fetch(&mut self, parameter: Parameter) -> IntcodeType {
+    fn fetch(&mut self, parameter: Parameter) -> i64 {
         let addr = self.load();
         match parameter {
             Parameter::Immediate => addr,
@@ -214,7 +212,7 @@ impl Intcode {
         }
     }
 
-    fn load(&mut self) -> IntcodeType {
+    fn load(&mut self) -> i64 {
         let value = self.memory[self.pc];
         self.pc += 1;
         value

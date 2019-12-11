@@ -34,17 +34,17 @@ mod tests {
 
     use super::*;
 
-    fn assert_state(program: &str, expected_state: Vec<i32>) {
+    fn assert_state(program: &str, expected_state: Vec<i64>) {
         let mut vm = Intcode::new();
         let program = Intcode::compile(program);
         vm.reset(program);
         vm.run();
-        // let state = &vm.memory[0..expected_state.len()];
-        // assert_eq!(&expected_state[0..], state);
+        let state = &vm.memory[0..expected_state.len()];
+        assert_eq!(&expected_state[0..], state);
     }
 
     #[test]
-    fn day_2_example_1() {
+    fn computer_produces_expected_states() {
         assert_state("1,0,0,0,99", vec![2,0,0,0,99]);
         assert_state("2,3,0,3,99", vec![2,3,0,6,99]);
         assert_state("2,4,4,5,99,0", vec![2,4,4,5,99,9801]);

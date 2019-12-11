@@ -26,14 +26,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn example_1() {
+    fn computes_expected_total_fuel_required() {
         assert_eq!(2.0, total_fuel_required(14.0));
         assert_eq!(966.0, total_fuel_required(1969.0));
         assert_eq!(50346.0, total_fuel_required(100756.0));
     }
 
     #[test]
-    fn example_2() {
+    fn computed_expected_fuel_required() {
         assert_eq!(2.0, fuel_required(12.0));
         assert_eq!(2.0, fuel_required(14.0));
         assert_eq!(654.0, fuel_required(1969.0));

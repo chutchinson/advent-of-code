@@ -43,7 +43,7 @@ fn print_image(image: &[u8], width: usize, height: usize) {
         for x in 0..width {
             let index = y * width + x;
             let pixel = image[index];
-            let res = match pixel {
+            match pixel {
                 1 => print!("\u{2588}"), // full block
                 _ => print!(" ")
             };

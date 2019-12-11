@@ -1,4 +1,4 @@
-use crate::intcode::Intcode;
+use crate::intcode::{Intcode, IntcodeBuilder};
 
 pub fn solve() {
     let input = include_str!("./input.txt");
@@ -26,13 +26,13 @@ pub fn solve() {
 }
 
 struct Permutations {
-    array: Vec<i32>,
+    array: Vec<i64>,
     swaps: Vec<usize>,
     index: usize
 }
 
 impl Iterator for Permutations {
-    type Item = Vec<i32>;
+    type Item = Vec<i64>;
     fn next(&mut self) -> Option<Self::Item> {
         if self.index > 0 {
             loop {
@@ -49,7 +49,7 @@ impl Iterator for Permutations {
     }
 }
 
-fn permutations(array: Vec<i32>) -> Permutations {
+fn permutations(array: Vec<i64>) -> Permutations {
     let n = array.len();
     let index = 0;
     Permutations {
@@ -65,23 +65,25 @@ struct Amplifier {
 
 impl Amplifier {
 
-    pub fn new(rom: &str, phase: i32) -> Amplifier {
-        let mut computer = Intcode::with_input(rom);
-        computer.inputs.push_back(phase);
+    pub fn new(rom: &str, phase: i64) -> Amplifier {
+        let mut computer = IntcodeBuilder::new()
+            .with_program(rom)
+            .with_inputs(&[phase])
+            .build();
         Amplifier {
             computer
         }
     }
 
-    pub fn run(&mut self, signal: i32) -> Option<i32> {
+    pub fn run(&mut self, signal: i64) -> Option<i64> {
         self.computer.inputs.push_back(signal);
-        self.computer.run();
+        self.computer.run_yield();
         self.computer.outputs.pop()
     }
 
 }
 
-fn amplify_thruster_signal(rom: &str, sequence: &[i32], feedback: bool) -> i32 {
+fn amplify_thruster_signal(rom: &str, sequence: &[i64], feedback: bool) -> i64 {
     let mut amps: Vec<Amplifier> = sequence.iter()
         .map(|phase| Amplifier::new(rom, *phase))
         .collect(); 

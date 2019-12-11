@@ -1,51 +1,107 @@
 use std::collections::VecDeque;
 
+pub type IntcodeType = i64;
+
 #[derive(Debug)]
 pub struct Intcode {
     pub halted: bool,
-    pub memory: Vec<i32>,
+    pub memory: Vec<IntcodeType>,
     pub pc: usize,
-    pub inputs: VecDeque<i32>,
-    pub outputs: Vec<i32>
+    pub inputs: VecDeque<IntcodeType>,
+    pub outputs: Vec<IntcodeType>,
+    pub yielding: bool,
+    pub relative_base: i64
 }
 
-const OP_HALT: i32 = 99;
-const OP_ADD: i32 = 1;
-const OP_MUL: i32 = 2;
-const OP_INPUT: i32 = 3;
-const OP_OUTPUT: i32 = 4;
-const OP_JT: i32 = 5;
-const OP_JF: i32 = 6;
-const OP_CLT: i32 = 7;
-const OP_CEQ: i32 = 8;
-
-fn extract_digit(value: i32, index: usize) -> i32 {
-    let power = 10i32.pow(index as u32);
-    let digit = (value / power) % 10;
-    digit as i32
-}
+const OP_HALT: u8 = 99;
+const OP_ADD: u8 = 1;
+const OP_MUL: u8 = 2;
+const OP_INPUT: u8 = 3;
+const OP_OUTPUT: u8 = 4;
+const OP_JT: u8 = 5;
+const OP_JF: u8 = 6;
+const OP_CLT: u8 = 7;
+const OP_CEQ: u8 = 8;
+const OP_RBO: u8 = 9;
 
 #[derive(Debug, Copy, Clone)]
 enum Parameter {
     Position,
-    Immediate
+    Immediate,
+    Relative
 }
 
 #[derive(Debug)]
 struct Instruction {
-    opcode: i32,
+    opcode: u8,
     op1: Parameter,
     op2: Parameter,
     op3: Parameter
 }
 
-impl From<i32> for Parameter {
-    fn from(value: i32) -> Parameter {
+impl From<IntcodeType> for Parameter {
+    fn from(value: IntcodeType) -> Parameter {
         match value {
+            0 => Parameter::Position,
             1 => Parameter::Immediate,
-            _ => Parameter::Position
+            2 => Parameter::Relative,
+            _ => panic!("invalid parameter mode: {}", value)
         }
     }
+}
+
+pub struct IntcodeBuilder {
+    memory: Vec<IntcodeType>,
+    inputs: Vec<IntcodeType>,
+    relative_base: IntcodeType
+}
+
+impl IntcodeBuilder {
+
+    pub fn new() -> IntcodeBuilder {
+        IntcodeBuilder {
+            memory: Vec::new(),
+            inputs: Vec::new(),
+            relative_base: 0
+        }
+    }
+
+    pub fn with_memory(mut self, memory: &[IntcodeType]) -> IntcodeBuilder {
+        let size = std::cmp::max(memory.len(), self.memory.len());
+        self.memory.resize(size, 0);
+        let slice = &mut self.memory[0..memory.len()];
+        slice.copy_from_slice(memory);
+        self
+    }
+
+    pub fn with_inputs(mut self, inputs: &[IntcodeType]) -> IntcodeBuilder {
+        self.inputs.extend(inputs.iter());
+        self
+    }
+
+    pub fn with_relative_base(mut self, value: IntcodeType) -> IntcodeBuilder {
+        self.relative_base = value;
+        self
+    }
+
+    pub fn with_program(mut self, input: &str) -> IntcodeBuilder {
+        let program = Intcode::compile(input);
+        self.with_memory(&program)
+    }
+
+    pub fn with_memory_size(mut self, size: usize) -> IntcodeBuilder {
+        self.memory.resize(size, Default::default());
+        self
+    }
+
+    pub fn build(self) -> Intcode {
+        let mut vm = Intcode::new();
+        vm.reset(self.memory);
+        vm.relative_base = self.relative_base;
+        vm.inputs.extend(self.inputs.iter());
+        vm
+    }
+
 }
 
 impl Intcode {
@@ -56,42 +112,41 @@ impl Intcode {
             inputs: VecDeque::new(),
             outputs: Vec::new(),
             pc: 0,
-            halted: false
+            halted: false,
+            yielding: false,
+            relative_base: 0
         }
     }
 
-    pub fn with_input(input: &str) -> Intcode {
-        let program = Self::compile(input);
-        let mut vm = Intcode::new();
-        vm.reset(program);
-        vm
-    }
-
-    pub fn compile(input: &str) -> Vec<i32> {
+    pub fn compile(input: &str) -> Vec<IntcodeType> {
         input
             .split(",")
-            .map(|x| x.parse::<i32>().unwrap())
+            .map(|x| x.parse::<IntcodeType>().unwrap())
             .collect()
     }
 
     fn decode(&mut self) -> Instruction {
         let op = self.load();
-        let opcode = op % 10;
-        let (p1, p2, p3) = (extract_digit(op, 2), extract_digit(op, 3), extract_digit(op, 4));
+        let opcode = op % 100;
+        let p1 = (op / 100) % 10;
+        let p2 = (op / 1000) % 10;
+        let p3 = (op / 10000) % 10;
         Instruction {
-            opcode: opcode,
+            opcode: opcode as u8,
             op1: p1.into(),
             op2: p2.into(),
             op3: p3.into()
         }
     }
 
-    pub fn reset(&mut self, memory: Vec<i32>) {
+    pub fn reset(&mut self, memory: Vec<IntcodeType>) {
         self.memory = memory;
         self.pc = 0;
         self.halted = false;
+        self.yielding = false;
         self.inputs.clear();
         self.outputs.clear();
+        self.relative_base = 0;
     }
 
     pub fn cycle(&mut self) {
@@ -109,39 +164,65 @@ impl Intcode {
             OP_JF => self.op_jf(&op),
             OP_CEQ => self.op_ceq(&op),
             OP_CLT => self.op_clt(&op),
-            _ => self.halted = true
+            OP_RBO => self.op_rbo(&op),
+            _ => panic!("unknown opcode")
         }
     }
 
-    pub fn run(&mut self) {
-        self.halted = false;
+    pub fn run_yield(&mut self) {
         while !self.halted {
-            self.cycle()
-        }
-    }
-
-    pub fn read(&self, addr: i32) -> i32 {
-        self.memory[addr as usize]
-    }
-
-    pub fn write(&mut self, addr: i32, value: i32) {
-        self.memory[addr as usize] = value
-    }
-
-    fn fetch(&mut self, parameter: Parameter) -> i32 {
-        match parameter {
-            Parameter::Immediate => self.load(),
-            Parameter::Position => {
-                let addr = self.load();
-                self.read(addr)
+            self.yielding = false;
+            self.cycle();
+            if self.yielding {
+                return;
             }
         }
     }
 
-    fn load(&mut self) -> i32 {
+    pub fn run(&mut self) {
+        while !self.halted {
+            self.cycle();
+        }
+    }
+
+    pub fn read(&self, addr: IntcodeType) -> IntcodeType {
+        if addr < 0 {
+            panic!("attempt to read from negative memory address");
+        }
+        self.memory[addr as usize]
+    }
+
+    pub fn write(&mut self, addr: IntcodeType, value: IntcodeType) {
+        self.memory[addr as usize] = value
+    }
+
+    fn fetch_out(&mut self, parameter: Parameter) -> IntcodeType {
+        let addr = self.load();
+        match parameter {
+            Parameter::Position => addr,
+            Parameter::Relative => self.relative_base + addr,
+            _ => panic!("invalid parameter mode")
+        }
+    }
+
+    fn fetch(&mut self, parameter: Parameter) -> IntcodeType {
+        let addr = self.load();
+        match parameter {
+            Parameter::Immediate => addr,
+            Parameter::Position => self.read(addr),
+            Parameter::Relative => self.read(self.relative_base + addr)
+        }
+    }
+
+    fn load(&mut self) -> IntcodeType {
         let value = self.memory[self.pc];
         self.pc += 1;
         value
+    }
+
+    fn op_rbo(&mut self, op: &Instruction) {
+        let offset = self.fetch(op.op1);
+        self.relative_base += offset;
     }
 
     fn op_jt(&mut self, op: &Instruction) {
@@ -163,45 +244,44 @@ impl Intcode {
     fn op_clt(&mut self, op: &Instruction) {
         let a = self.fetch(op.op1);
         let b = self.fetch(op.op2);
-        let dest = self.load();
+        let dest = self.fetch_out(op.op3);
         self.write(dest, if a < b { 1 } else { 0 });
     }
 
     fn op_ceq(&mut self, op: &Instruction) {
         let a = self.fetch(op.op1);
         let b = self.fetch(op.op2);
-        let dest = self.load();
+        let dest = self.fetch_out(op.op3);
         self.write(dest, if a == b { 1 } else { 0 });
     }
 
-    fn op_input(&mut self, _: &Instruction) {
-        let dest = self.load();
-        let value = self.inputs.pop_front().unwrap();
+    fn op_input(&mut self, op: &Instruction) {
+        let dest = self.fetch_out(op.op1);
+        let value = self.inputs.pop_front().unwrap_or(0);
         self.write(dest, value);
     }
 
     fn op_output(&mut self, op: &Instruction) {
         let value = self.fetch(op.op1);
         self.outputs.push(value);
-        self.halted = true;
+        self.yielding = true;
     }
     
     fn op_halt(&mut self, _: &Instruction) {
-        self.pc += 1;
         self.halted = true;
     }
 
     fn op_mul(&mut self, op: &Instruction) {
         let a = self.fetch(op.op1);
         let b = self.fetch(op.op2);
-        let dest = self.load();
+        let dest = self.fetch_out(op.op3);
         self.write(dest, a * b);
     }
 
     fn op_add(&mut self, op: &Instruction) {
         let a = self.fetch(op.op1);
         let b = self.fetch(op.op2);
-        let dest = self.load();
+        let dest = self.fetch_out(op.op3);
         self.write(dest, a + b);
     }
 

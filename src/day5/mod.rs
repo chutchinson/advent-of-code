@@ -1,10 +1,12 @@
-use crate::intcode::Intcode;
+use crate::intcode::{IntcodeBuilder};
 
 pub fn solve() {
     let input = include_str!("./input.txt");
     let execute = |value| {
-        let mut vm = Intcode::with_input(input);
-        vm.inputs.push_front(value);
+        let mut vm = IntcodeBuilder::new()  
+            .with_program(input)
+            .with_inputs(&[value])
+            .build();
         vm.run();
         *vm.outputs.last().unwrap()
     };
@@ -21,17 +23,21 @@ mod tests {
 
     use super::*;
 
-    fn assert_memory(program: &str, input: i32, addr: i32, expected: i32) {
-        let mut vm = Intcode::with_input(program);
-        vm.inputs.push_front(input);
+    fn assert_memory(program: &str, input: i64, addr: i64, expected: i64) {
+        let mut vm = IntcodeBuilder::new()
+            .with_program(program)
+            .with_inputs(&[input])
+            .build();
         vm.run();
         let v = vm.read(addr);
         assert_eq!(expected, v);
     }
 
-    fn assert_output(program: &str, input: i32, output: i32) {
-        let mut vm = Intcode::with_input(program);
-        vm.inputs.push_front(input);
+    fn assert_output(program: &str, input: i64, output: i64) {
+        let mut vm = IntcodeBuilder::new()
+            .with_program(program)
+            .with_inputs(&[input])
+            .build();
         vm.run();
         let value = vm.outputs.last().unwrap();
         assert_eq!(output, *value);

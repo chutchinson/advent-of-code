@@ -3,7 +3,7 @@ use std::io::prelude::*;
 
 pub fn solve() {
 
-    let input = include_str!("./input.txt");
+    let input = include_str!("./inputs/8.txt");
     let width = 25;
     let height = 6;
     let data: Vec<u8> = input.chars().map(|x| x.to_digit(10).unwrap() as u8).collect();
@@ -14,7 +14,7 @@ pub fn solve() {
     let twos = count_pixels(image, |x| { x == 2 });
     let sum = ones * twos;
 
-    println!("{:?}", sum);
+    println!("{}", sum);
 
     let size = width * height;
     let layers = data.len() / size;
@@ -43,10 +43,10 @@ fn print_image(image: &[u8], width: usize, height: usize) {
         for x in 0..width {
             let index = y * width + x;
             let pixel = image[index];
-            match pixel {
-                1 => print!("\u{25a0}"),
+            let res = match pixel {
+                1 => print!("\u{2588}"), // full block
                 _ => print!(" ")
-            }
+            };
         }
         println!();
     }

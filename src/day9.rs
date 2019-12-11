@@ -1,8 +1,7 @@
 use crate::intcode::{Intcode, IntcodeBuilder};
 
 pub fn solve() {
-    
-    let program = include_str!("./input.txt");
+    let program = include_str!("./inputs/9.txt");
     let memory = Intcode::compile(program);
 
     let mut vm = IntcodeBuilder::new()
@@ -14,7 +13,8 @@ pub fn solve() {
     vm.run();
 
     let code = vm.outputs.pop().unwrap();
-    println!("{:?}", code);
+
+    println!("{}", code);
 
     let mut vm = IntcodeBuilder::new()
         .with_memory_size(4096)
@@ -25,8 +25,8 @@ pub fn solve() {
     vm.run();
 
     let code = vm.outputs.pop().unwrap();
-    println!("{:?}", code);
 
+    println!("{}", code);
 }
 
 #[cfg(test)]

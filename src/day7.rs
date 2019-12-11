@@ -1,7 +1,7 @@
 use crate::intcode::{Intcode, IntcodeBuilder};
 
 pub fn solve() {
-    let input = include_str!("./input.txt");
+    let input = include_str!("./inputs/7.txt");
 
     {
         let phases = vec![0, 1, 2, 3, 4];

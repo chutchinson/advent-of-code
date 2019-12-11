@@ -1,5 +1,6 @@
+
 pub fn solve() {
-    let input = include_str!("./input.txt");
+    let input = include_str!("./inputs/1.txt");
     let masses = input.lines()
         .map(|x| x.parse::<f32>().unwrap());
     let fuel_requirement_sum: f32 = masses.clone().map(|mass| fuel_required(mass)).sum();

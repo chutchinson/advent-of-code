@@ -9,20 +9,27 @@ mod day7;
 mod day8;
 mod day9;
 
+type Solver = fn() -> ();
+
 fn main() {
-    let days: Vec<fn()> = vec![
-        // day1::solve,
-        // day2::solve,
-        // day3::solve,
-        // day4::solve,
-        // day5::solve,
-        // day6::solve,
-        // day7::solve,
-        // day8::solve,
+    println!("advent of code 2019");
+    println!("chris hutchinson <github.com/chutchinson>");
+    println!();
+
+    let days: Vec<Solver> = vec![
+        day1::solve,
+        day2::solve,
+        day3::solve,
+        day4::solve,
+        day5::solve,
+        day6::solve,
+        day7::solve,
+        day8::solve,
         day9::solve
     ];
+
     for (index, solve) in days.iter().enumerate() {
-        println!("day {}", index + 1);
+        println!("day {} ", index + 1);
         println!("---");
         solve();
         println!("---");

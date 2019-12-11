@@ -5,6 +5,7 @@ pub fn solve() {
     let range = 264360..746325+1;
     let password_count_1 = count_valid_passwords(range.clone(), is_valid_password_1);
     let password_count_2 = count_valid_passwords(range, is_valid_password_2);
+
     println!("{}", password_count_1);
     println!("{}", password_count_2);
 }

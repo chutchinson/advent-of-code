@@ -1,5 +1,14 @@
 use std::collections::{HashMap, HashSet};
 
+pub fn solve() {
+    let input = include_str!("./inputs/6.txt");
+    let orbits = orbits(input);
+    let body = orbits.bodies.iter().position(|x| x.name == "COM").unwrap();
+    let total_orbits = orbits.total_orbits(body, 0);
+    
+    println!("{}", total_orbits);
+}
+
 #[derive(Debug)]
 struct Orbit {
     body: usize,
@@ -131,14 +140,6 @@ fn orbits(input: &str) -> OrbitMap {
         bodies,
         orbits
     }
-}
-
-pub fn solve() {
-    let input = include_str!("./input.txt");
-    let orbits = orbits(input);
-    let body = orbits.bodies.iter().position(|x| x.name == "COM").unwrap();
-    let total_orbits = orbits.total_orbits(body, 0);
-    println!("{:?}", total_orbits);
 }
 
 #[cfg(test)]

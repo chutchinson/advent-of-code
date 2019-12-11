@@ -1,5 +1,15 @@
 use std::collections::{HashMap, HashSet};
 
+pub fn solve() {
+    let input = include_str!("./inputs/3.txt");
+    let grid = trace(input);
+    let min_distance = min_distance(&grid);
+    let min_steps = min_steps(&grid);
+
+    println!("{}", min_distance);
+    println!("{}", min_steps);
+}
+
 type Wire = Vec<Trace>;
 type Trace = (char, usize);
 type Point = (isize, isize);
@@ -12,16 +22,6 @@ struct Cell {
 
 fn manhatten_distance(a: Point, b: Point) -> isize {
     (a.0 - b.0).abs() + (a.1 - b.1).abs()
-}
-
-pub fn solve() {
-    let input = include_str!("./input.txt");
-    let grid = trace(input);
-    let min_distance = min_distance(&grid);
-    let min_steps = min_steps(&grid);
-
-    println!("{}", min_distance);
-    println!("{}", min_steps);
 }
 
 fn min_steps(grid: &Grid) -> isize {

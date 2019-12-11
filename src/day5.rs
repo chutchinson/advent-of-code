@@ -1,7 +1,7 @@
 use crate::intcode::{IntcodeBuilder};
 
 pub fn solve() {
-    let input = include_str!("./input.txt");
+    let input = include_str!("./inputs/5.txt");
     let execute = |value| {
         let mut vm = IntcodeBuilder::new()  
             .with_program(input)
@@ -11,11 +11,13 @@ pub fn solve() {
         *vm.outputs.last().unwrap()
     };
 
-    let diagnostic_code_1 = execute(1);
-    let diagnostic_code_2 = execute(5);
+    let diagnostic_code = execute(1);
 
-    println!("{}", diagnostic_code_1);
-    println!("{}", diagnostic_code_2);
+    println!("{}", diagnostic_code);
+
+    let diagnostic_code = execute(5);
+
+    println!("{}", diagnostic_code);
 }
 
 #[cfg(test)]

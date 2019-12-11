@@ -1,7 +1,7 @@
 use crate::intcode::Intcode;
 
 pub fn solve() {
-    let input = include_str!("./input.txt");
+    let input = include_str!("./inputs/2.txt");
     let program = Intcode::compile(input);
     let mut vm = Intcode::new();
 
